@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
-using Dapper;
 
 namespace KafkaSandbox
 {
-    public class LogWorker
+    public class ElasticsearchWorker
     {
         public static async Task Consume()
         {
@@ -20,16 +18,17 @@ namespace KafkaSandbox
                 { "auto.offset.reset", "earliest" }
             };
 
+
             using (var c = new Consumer<Ignore, string>(conf, null, new StringDeserializer(Encoding.UTF8)))
             {
                 await KafkaHelper.RegisterHandler(
                     c,
-                    GetLogEvents(),
-                    async (message) => await InsertEvent("fake", message));
+                    GetElasticsearchEvents(),
+                    async (message) => await UpdateElasticsearch(message));
             }
         }
 
-        private static IEnumerable<string> GetLogEvents()
+        private static IEnumerable<string> GetElasticsearchEvents()
         {
             return new List<string>
             {
@@ -38,22 +37,9 @@ namespace KafkaSandbox
             };
         }
 
-        private static async Task InsertEvent(string key, string message)
+        private static Task UpdateElasticsearch(string message)
         {
-            using (var sqlConnection = new SqlConnection("Server=localhost;Database=Sandbox;User Id=developer;Password=Sandbox4ever;MultipleActiveResultSets=true"))
-            {
-                var command = @"
-                    insert into Events (Type, Message)
-                    values (@Type, @Message)";
-
-                var result = await sqlConnection.ExecuteAsync(
-                    command,
-                    new 
-                    {
-                        Type = key,
-                        Message = message
-                    });
-            }
+            throw new NotImplementedException();
         }
     }
 }

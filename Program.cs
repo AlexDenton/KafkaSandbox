@@ -19,7 +19,8 @@ namespace KafkaSandbox
             var tasks = new List<Task>
             {
                 Producer.ProduceEvents(),
-                LogWorker.Consume()
+                LogWorker.Consume(),
+                ElasticsearchWorker.Consume()
             };
 
             await Task.WhenAll(tasks);
