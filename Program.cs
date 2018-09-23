@@ -16,48 +16,28 @@ namespace KafkaSandbox
 
         private static async Task Run()
         {
-            await Produce();
-            await Consume();
-        }
-
-        private static async Task Produce()
-        {
-            var config = new Dictionary<string, object> 
-            { 
-                { "bootstrap.servers", "localhost:9092" } 
+            var tasks = new List<Task>
+            {
+                Producer.ProduceEvents(),
+                Consume()
             };
 
-
-            // A Producer for sending messages with null keys and UTF-8 encoded values.
-            var producer = new Producer<Null, string>(config, null, new StringSerializer(Encoding.UTF8));
-
-            using (var p = producer)
-            {
-                try
-                {
-                    var message = new Message<Null, string> { Value="test" };
-                    var dr = await p.ProduceAsync("test-topic-1", message);
-                    Console.WriteLine($"Delivered '{dr.Value}' to '{dr.TopicPartitionOffset}'");
-                }
-                catch (KafkaException e)
-                {
-                    Console.WriteLine($"Delivery failed: {e.Error.Reason}");
-                }
-            }
+            await Task.WhenAll();
+            await Consume();
         }
 
         private static async Task Consume()
         {
             var conf = new Dictionary<string, object> 
             { 
-                { "group.id", "test-consumer-group" },
+                { "group.id", "consumer-group-1" },
                 { "bootstrap.servers", "localhost:9092" },
                 { "auto.offset.reset", "earliest" }
             };
 
             using (var c = new Consumer<Ignore, string>(conf, null, new StringDeserializer(Encoding.UTF8)))
             {
-                c.Subscribe("test-topic-1");
+                c.Subscribe("folder-assigned-events");
 
                 while (true)
                 {
