@@ -22,7 +22,7 @@ namespace KafkaSandbox
                 LogWorker.Consume()
             };
 
-            await Task.WhenAll();
+            await Task.WhenAll(tasks);
         }
     }
 }

@@ -33,7 +33,7 @@ namespace KafkaSandbox
                     {
                         Console.WriteLine($"Delivery failed: {e.Error.Reason}");
                     }
-
+                    
                     var delay = new Random().Next() % 5000;
                     await Task.Delay(delay);
                     count++;

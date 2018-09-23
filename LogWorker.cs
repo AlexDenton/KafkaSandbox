@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Text;
 using System.Threading.Tasks;
 using Confluent.Kafka;
 using Confluent.Kafka.Serialization;
+using Dapper;
 
 namespace KafkaSandbox
 {
@@ -29,7 +31,8 @@ namespace KafkaSandbox
                         var cr = await c.ConsumeAsync();
                         if (!cr.Error.IsError)
                         {
-                            Console.WriteLine($"Consumed message '{cr.Value}' at: '{cr.TopicPartitionOffset}'.");
+Console.WriteLine($"Consumed message '{cr.Value}' at: '{cr.TopicPartitionOffset}'.");
+                            await InsertEvent(cr.Value);
                         }
                         else
                         {
@@ -41,8 +44,24 @@ namespace KafkaSandbox
                         Console.WriteLine($"Error occured: {e.Error.Reason}");
                     }
                 }
-                
-                c.Close();
+            }
+        }
+
+        private static async Task InsertEvent(string message)
+        {
+            using (var sqlConnection = new SqlConnection("Server=localhost;Database=Sandbox;User Id=developer;Password=Sandbox4ever;MultipleActiveResultSets=true"))
+            {
+                var command = @"
+                    insert into Events (Type, Message)
+                    values (@Type, @Message)";
+
+                var result = await sqlConnection.ExecuteAsync(
+                    command,
+                    new 
+                    {
+                        Type = "FolderAssignedEvent",
+                        Message = message
+                    });
             }
         }
     }
