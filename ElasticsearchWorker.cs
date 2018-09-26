@@ -24,7 +24,7 @@ namespace KafkaSandbox
                 await KafkaHelper.RegisterHandler(
                     c,
                     GetElasticsearchEvents(),
-                    async (message) => await UpdateElasticsearch(message));
+                    async (topic, message) => await UpdateElasticsearch(message));
             }
         }
 

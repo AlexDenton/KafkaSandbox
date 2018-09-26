@@ -25,7 +25,7 @@ namespace KafkaSandbox
                 await KafkaHelper.RegisterHandler(
                     c,
                     GetLogEvents(),
-                    async (message) => await InsertEvent("fake", message));
+                    async (topic, message) => await InsertEvent(KafkaHelper.GetEventTypeFromTopic(topic), message));
             }
         }
 
@@ -38,7 +38,7 @@ namespace KafkaSandbox
             };
         }
 
-        private static async Task InsertEvent(string key, string message)
+        private static async Task InsertEvent(string type, string message)
         {
             using (var sqlConnection = new SqlConnection("Server=localhost;Database=Sandbox;User Id=developer;Password=Sandbox4ever;MultipleActiveResultSets=true"))
             {
@@ -50,7 +50,7 @@ namespace KafkaSandbox
                     command,
                     new 
                     {
-                        Type = key,
+                        Type = type,
                         Message = message
                     });
             }

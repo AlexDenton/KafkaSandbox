@@ -16,10 +16,27 @@ namespace KafkaSandbox
             }
         }
 
+        public static string GetEventTypeFromTopic(string topic)
+        {
+            return _TopicToEventTypeMap[topic];
+        }
+
+        private static IDictionary<string, string> _TopicToEventTypeMap
+        {
+            get
+            {
+                return new Dictionary<string, string>
+                {
+                    { Topics.FolderAssignedEvents, EventTypes.FolderAssignedEvent },
+                    { Topics.GroupAssignedEvents, EventTypes.GroupAssignedEvent },
+                };
+            }
+        }
+
         public static async Task RegisterHandler<T1, T2>(
             Consumer<T1, T2> consumer, 
             IEnumerable<string> topics,
-            Func<T2, Task> handler)
+            Func<string, T2, Task> handler)
         {
             using (consumer)
             {
@@ -30,10 +47,10 @@ namespace KafkaSandbox
                     try
                     {
                         var cr = await consumer.ConsumeAsync();
-                        
+
                         if (!cr.Error.IsError)
                         {
-                            await handler(cr.Value);
+                            await handler(cr.Topic, cr.Value);
                         }
                         else
                         {
