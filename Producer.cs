@@ -21,24 +21,48 @@ namespace KafkaSandbox
 
             using (var p = producer)
             {
-                var count = 0;
                 while(true)
                 {
-                    try
-                    {
-                        var message = new Message<Null, string> { Value=$"FolderAssignedEvent{count}" };
-                        var dr = await p.ProduceAsync("folder-assigned-events", message);
-                    }
-                    catch (KafkaException e)
-                    {
-                        Console.WriteLine($"Delivery failed: {e.Error.Reason}");
-                    }
+                    var messages = GenerateRandomMessages();
+                    await ProduceMessages(p, messages);
                     
                     var delay = new Random().Next() % 5000;
                     await Task.Delay(delay);
-                    count++;
                 }
             }
         }  
+
+        private static IEnumerable<Message<Null, string>> GenerateRandomMessages()
+        {
+            var messages = new List<Message<Null, string>>();
+
+            foreach(var eventType in EventTypes.AllEventTypes)
+            {
+                var random = new Random().Next() % 5;
+
+                for (var i = 0; i < random; i++)
+                {
+                    var guid = Guid.NewGuid();
+                    messages.Add(new Message<Null, string> { Value=$"{eventType}{guid}" });
+                }
+            }
+
+            return messages;
+        }
+
+        private static async Task ProduceMessages(Producer<Null, string> producer, IEnumerable<Message<Null, string>> messages)
+        {
+            foreach(var message in messages)
+            {
+                try
+                {
+                    var dr = await producer.ProduceAsync(Topics.FolderAssignedEvents, message);
+                }
+                catch (KafkaException e)
+                {
+                    Console.WriteLine($"Delivery failed: {e.Error.Reason}");
+                }
+            }
+        }
     }
 }
